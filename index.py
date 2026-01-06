@@ -305,7 +305,7 @@ async def on_interaction(interaction: discord.Interaction):
         server_info["robloxVerification"]["data"][interaction.user.id] = {
             "user_id": interaction.user.id,
             "rbx_id": customId.split("_")[2], # type: ignore
-            "str": "Wsg I'm iamiak\n\nig i build games?"
+            "str": final_string
         }
 
         embed = discord.Embed(
