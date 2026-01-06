@@ -1,4 +1,5 @@
 import asyncio
+import enum
 import discord
 from discord.ext import commands
 from pytimeparse.timeparse import timeparse
@@ -80,6 +81,7 @@ def add_server(serverId: str):
         "gwInfo": {
             "channelId": ""
         },
+        "warns": {},
         "snipes": {}
     }
 
@@ -931,6 +933,56 @@ async def vmdisable(ctx):
     vm["enabled"] = False
 
     await ctx.send("🛑 VoiceMaster disabled and cleaned up.")
+
+@bot.command()
+async def warn(ctx, user: discord.Member, *, reason):
+    server_info = get_server_info(ctx.guild.id)
+
+    await log_moderation(ctx.author.id, f"Warned <@{user.id}>", ctx.guild.id, "")
+
+    if user.id not in server_info["warns"]:
+        server_info["warns"][user.id] = [
+            {
+                "date": datetime.now(),
+                "by": ctx.author.id,
+                "reason": reason
+            }
+        ]
+    else:
+        server_info["warns"][user.id].append({
+                "date": datetime.now(),
+                "by": ctx.author.id,
+                "reason": reason
+            })
+    
+    embed = discord.Embed(
+        description=f"<:PlusLogo:1453259324674539661> A warn was added to <@{user.id}> for {reason}. The user now has {len(server_info['warns'][user.id])} warns.",
+        color=discord.Color.blue()
+    )
+
+    await ctx.send(embed=embed)
+
+@bot.command()
+async def checkwarns(ctx, user: discord.Member):
+    server_info = get_server_info(ctx.guild.id)
+
+    if user.id in server_info["warns"]:
+        embed = discord.Embed(
+            description=f"## The user <@{user.id}> has {len(server_info['warns'][user.id])} warns.",
+            color=discord.Color.blue()
+        )
+
+        for i, warn in enumerate(server_info["warns"][user.id], start=1):
+            embed.add_field(name=warn['reason'], value=f"By {bot.get_user(int(warn['by'])).id} on {warn['date']}") # type: ignore im pretty sure it does exist ;) -- iamiak
+        
+        await ctx.send(embed=embed)
+    else:
+        embed = discord.Embed(
+            description=f"The user <@{user.id}> has no warns.",
+            color=discord.Color.blue()
+        )
+
+        await ctx.send(embed=embed)
 
 @bot.command()
 async def roleadd(ctx, user: discord.Member, role: discord.Role):
