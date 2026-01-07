@@ -19,6 +19,10 @@ import io
 
 from sqlalchemy import desc
 
+# NOTE: This is my part file, DO NOT MESS with it
+async def blaze_part():
+    await bot.load_extension("blaze")
+    
 def get_server_info(serverId: str):
     if serverId not in servers_temp:
         add_server(serverId)
@@ -133,6 +137,7 @@ model = Detoxify("original")
 servers_temp = TrackedDict()
 bot = commands.Bot(command_prefix=get_prefix, intents=discord.Intents.all(), help_command=None)
 token = os.getenv("TOKEN")
+bot.setup_hook = blaze_part # NOTE: DO NOT edit this part
 
 def resolve_color(value: str) -> discord.Color:
     if not value:
