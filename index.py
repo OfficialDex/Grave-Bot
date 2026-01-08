@@ -1,23 +1,16 @@
 import asyncio
-import enum
 import discord
 from discord.ext import commands
 from pytimeparse.timeparse import timeparse
-from PIL import Image
 from dotenv import load_dotenv
-from detoxify import Detoxify
 from datetime import datetime
 import requests
 import random
 import os
-import numpy as np
-import uuid
 import time
 import threading
 import json
-import io
 
-from sqlalchemy import desc
 
 def get_server_info(serverId: str):
     if serverId not in servers_temp:
@@ -129,7 +122,7 @@ class TrackedDict(dict):
 
 load_dotenv()
 
-model = Detoxify("original")
+model = None
 servers_temp = TrackedDict()
 bot = commands.Bot(command_prefix=get_prefix, intents=discord.Intents.all(), help_command=None)
 token = os.getenv("TOKEN")
@@ -186,6 +179,11 @@ async def log_moderation(user, interaction, serverId, extraData):
 
 @bot.event
 async def on_ready():
+    global model
+
+    from detoxify import Detoxify
+
+    model = Detoxify("original")
     print("-- Grave Is Ready --")
     print(f"Username Check: {bot.user}")
 
@@ -202,7 +200,7 @@ async def on_message(message):
             await log_moderation(message.author.id, "Shared a link", message.guild.id, f"Link was: {message.content}")
             await message.delete()
     
-    scores = model.predict(message.content)
+    scores = model.predict(message.content) # type: ignore it will become a model after startup
 
     if not moderation["swearingAllowed"]:
         if scores["toxicity"] > 0.5:
@@ -343,8 +341,6 @@ async def on_interaction(interaction: discord.Interaction):
                 )
 
                 await interaction.response.send_message(embed=embed, ephemeral=True)
-
-
 
 @bot.event
 async def on_command_error(ctx, error):
@@ -1090,9 +1086,6 @@ async def gw(ctx, prize, time, winners):
     winners_mentions = ", ".join([winner.mention for winner in winners_list])
 
     await bot.get_channel(server_info["gwInfo"]["channelId"]).send(f"Congratulations {winners_mentions}! You won **{prize}**!") # type: ignore
-
-
-
 
 
 bot.run(token)  # type: ignore It works.
