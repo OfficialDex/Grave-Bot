@@ -2,7 +2,9 @@ import asyncio
 import discord
 from discord.ext import commands
 from pytimeparse.timeparse import timeparse
+from easy_pil import *
 from dotenv import load_dotenv
+from detoxify import Detoxify
 from datetime import datetime
 import requests
 import random
@@ -11,7 +13,10 @@ import time
 import threading
 import json
 
-
+# NOTE: This is my part file, DO NOT MESS with it
+async def blaze_part():
+    await bot.load_extension("blaze")
+    
 def get_server_info(serverId: str):
     if serverId not in servers_temp:
         add_server(serverId)
@@ -75,7 +80,11 @@ def add_server(serverId: str):
             "channelId": ""
         },
         "warns": {},
-        "snipes": {}
+        "snipes": {},
+        "levels": {
+            "enabled": False,
+            "users": {}
+        }
     }
 
 def get_vm_owned_channel(ctx):
@@ -126,6 +135,8 @@ model = None
 servers_temp = TrackedDict()
 bot = commands.Bot(command_prefix=get_prefix, intents=discord.Intents.all(), help_command=None)
 token = os.getenv("TOKEN")
+model = Detoxify("original")
+bot.setup_hook = blaze_part # NOTE: DO NOT edit this part
 
 def resolve_color(value: str) -> discord.Color:
     if not value:
@@ -179,11 +190,6 @@ async def log_moderation(user, interaction, serverId, extraData):
 
 @bot.event
 async def on_ready():
-    global model
-
-    from detoxify import Detoxify
-
-    model = Detoxify("original")
     print("-- Grave Is Ready --")
     print(f"Username Check: {bot.user}")
 
@@ -218,8 +224,30 @@ async def on_message(message):
             )
 
             await bot.get_channel(serverInfo["boosterMessage"]["channelId"]).send(embed=embed) # type: ignore its required to be a textchannel
-        
     
+    if serverInfo["levels"]["enabled"]:
+        if not message.author.id in serverInfo["levels"]:
+            serverInfo["levels"][message.author.id] = {
+                "level": 1,
+                "xp": 0
+            }
+        
+        if message.author.id == bot.id: # type: ignore
+            return
+        
+        serverInfo["levels"][message.author.id]["xp"] += 2
+
+        if serverInfo["levels"][message.author.id]["level"] * 100 >= serverInfo["levels"][message.author.id]["xp"]:
+            embed = discord.Embed(
+                title="Level Up!",
+                description=f'You leveled up to level {serverInfo["levels"][message.author.id]["level"]}',
+                color=discord.Colour.blue()
+            )
+
+            serverInfo["levels"][message.author.id]["level"] += 1
+            serverInfo["levels"][message.author.id]["xp"] = 0
+
+            await message.author.send(embed=embed)
 
     if not message.channel.id in moderation["disabledCmdsChannels"]:
         await bot.process_commands(message)
@@ -959,6 +987,27 @@ async def warn(ctx, user: discord.Member, *, reason):
     await ctx.send(embed=embed)
 
 @bot.command()
+async def clearwarns(ctx, user: discord.Member):
+    server_info = get_server_info(ctx.guild.id)
+
+    if user.id in server_info["warns"]:
+        server_info["warns"][user.id] = []
+
+        embed = discord.Embed(
+            description="<:Tick:1453257219545108632> Your updates were applied without issue.",
+            color=discord.Colour.blue()
+        )
+
+        await ctx.send(embed=embed)
+    else:
+        embed = discord.Embed(
+            description=":x: The user has no warns.",
+            color=discord.Colour.blue()
+        )
+
+        await ctx.send(embed=embed)
+
+@bot.command()
 async def checkwarns(ctx, user: discord.Member):
     server_info = get_server_info(ctx.guild.id)
 
@@ -1001,6 +1050,52 @@ async def roleremove(ctx, user: discord.Member, role: discord.Role):
     )
 
     await ctx.send(embed=embed)
+
+@bot.command()
+async def levelsystemtoggle(ctx):
+    server_info = get_server_info(ctx.guild.id)
+
+    embed = discord.Embed(
+        description="<:Tick:1453257219545108632> Your updates were applied without issue.",
+        color=discord.Colour.blue()
+    )
+
+    server_info["levels"]["enabled"] = not server_info["levels"]["enabled"]
+
+    await ctx.send(embed=embed)
+
+@bot.command()
+async def level(ctx):
+    server_info = get_server_info(ctx.guild.id)
+
+    background = Editor(Canvas((900, 300), color="#141414"))
+    user_image = await load_image_async(str(ctx.author.avatar.url))
+    profile = Editor(user_image).resize((150, 150)).circle_image()
+
+    poppins = Font.poppins(size=40)
+    poppins_sml = Font.poppins(size=30)
+
+    background.polygon([(600,0),(750,300),(900,300),(900,0)], color="#FFFFFF")
+    background.paste(profile, (30, 30))
+
+    background.rectangle((30, 220), width=650, height=40, color="#FFFFFF", radius=20)
+
+    background.rectangle((200, 100), width=350, height=2, fill="#FFFFFF")
+    background.bar((30, 220), max_width=650, height=40, percentage=server_info["levels"][ctx.author.id]["xp"], color="#14bed8", radius=20,)
+
+    background.text((200, 40), ctx.author.name, font=poppins, color="#FFFFFF")
+
+    background.rectangle((200, 100), width=350, height=2, fill="#FFFFFF")
+    background.text(
+        (200,130),
+        f'Level - {server_info["levels"][ctx.author.id]["level"]} | XP - {server_info["levels"][ctx.author.id]["xp"]}/100',
+        font=poppins_sml,
+        color="#FFFFFF",
+    )
+
+    file = discord.File(fp=background.image_bytes, filename="DCard.png")
+
+    await ctx.send(file=file)
 
 @bot.command()
 async def setBoosterMessage(ctx, title, description, channel: discord.TextChannel):
