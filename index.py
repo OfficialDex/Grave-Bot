@@ -2,7 +2,7 @@ import asyncio
 import discord
 from discord.ext import commands
 from pytimeparse.timeparse import timeparse
-from easy_pil import *
+from easy_pil import * # type: ignore
 from dotenv import load_dotenv
 from detoxify import Detoxify
 from datetime import datetime
@@ -232,16 +232,16 @@ async def on_message(message):
                 "xp": 0
             }
         
-        if message.author.id == bot.id: # type: ignore
+        if message.author.id == bot.user.id: # type: ignore
             return
         
         serverInfo["levels"][message.author.id]["xp"] += 2
 
-        if serverInfo["levels"][message.author.id]["level"] * 100 >= serverInfo["levels"][message.author.id]["xp"]:
+        if serverInfo["levels"][message.author.id]["level"] * 200 >= serverInfo["levels"][message.author.id]["xp"]:
             embed = discord.Embed(
                 title="Level Up!",
                 description=f'You leveled up to level {serverInfo["levels"][message.author.id]["level"]}',
-                color=discord.Colour.blue()
+                color=discord.Colour.green()
             )
 
             serverInfo["levels"][message.author.id]["level"] += 1
@@ -1057,7 +1057,7 @@ async def levelsystemtoggle(ctx):
 
     embed = discord.Embed(
         description="<:Tick:1453257219545108632> Your updates were applied without issue.",
-        color=discord.Colour.blue()
+        color=discord.Colour.green()
     )
 
     server_info["levels"]["enabled"] = not server_info["levels"]["enabled"]
@@ -1068,34 +1068,37 @@ async def levelsystemtoggle(ctx):
 async def level(ctx):
     server_info = get_server_info(ctx.guild.id)
 
-    background = Editor(Canvas((900, 300), color="#141414"))
-    user_image = await load_image_async(str(ctx.author.avatar.url))
-    profile = Editor(user_image).resize((150, 150)).circle_image()
+    if server_info["levels"]["enabled"]:
+        background = Editor(Canvas((900, 300), color="#141414"))
+        user_image = await load_image_async(str(ctx.author.avatar.url))
+        profile = Editor(user_image).resize((150, 150)).circle_image()
 
-    poppins = Font.poppins(size=40)
-    poppins_sml = Font.poppins(size=30)
+        poppins = Font.poppins(size=40)
+        poppins_sml = Font.poppins(size=30)
 
-    background.polygon([(600,0),(750,300),(900,300),(900,0)], color="#FFFFFF")
-    background.paste(profile, (30, 30))
+        background.polygon([(600,0),(750,300),(900,300),(900,0)], color="#FFFFFF")
+        background.paste(profile, (30, 30))
 
-    background.rectangle((30, 220), width=650, height=40, color="#FFFFFF", radius=20)
+        background.rectangle((30, 220), width=650, height=40, color="#FFFFFF", radius=20)
 
-    background.rectangle((200, 100), width=350, height=2, fill="#FFFFFF")
-    background.bar((30, 220), max_width=650, height=40, percentage=server_info["levels"][ctx.author.id]["xp"], color="#14bed8", radius=20,)
+        background.rectangle((200, 100), width=350, height=2, fill="#FFFFFF")
+        background.bar((30, 220), max_width=650, height=40, percentage=server_info["levels"][ctx.author.id]["xp"], color="#14bed8", radius=20,)
 
-    background.text((200, 40), ctx.author.name, font=poppins, color="#FFFFFF")
+        background.text((200, 40), ctx.author.name, font=poppins, color="#FFFFFF")
 
-    background.rectangle((200, 100), width=350, height=2, fill="#FFFFFF")
-    background.text(
-        (200,130),
-        f'Level - {server_info["levels"][ctx.author.id]["level"]} | XP - {server_info["levels"][ctx.author.id]["xp"]}/100',
-        font=poppins_sml,
-        color="#FFFFFF",
-    )
+        background.rectangle((200, 100), width=350, height=2, fill="#FFFFFF")
+        background.text(
+            (200,130),
+            f'Level - {server_info["levels"][ctx.author.id]["level"]} | XP - {server_info["levels"][ctx.author.id]["xp"]}/100',
+            font=poppins_sml,
+            color="#FFFFFF",
+        )
 
-    file = discord.File(fp=background.image_bytes, filename="DCard.png")
+        file = discord.File(fp=background.image_bytes, filename="DCard.png")
 
-    await ctx.send(file=file)
+        await ctx.send(file=file)
+    else:
+        await ctx.send("This server does not use Levels.")
 
 @bot.command()
 async def setBoosterMessage(ctx, title, description, channel: discord.TextChannel):

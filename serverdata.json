@@ -1,1 +1,65 @@
-{}
+{
+    "1451878126039728253": {
+        "prefix": ",",
+        "welcomeMessage": {
+            "channelId": "",
+            "lastVideo": "",
+            "image": {
+                "enabled": false,
+                "background": "",
+                "description": ""
+            },
+            "embed": {
+                "enabled": false,
+                "color": "",
+                "title": "Welcome to the server!",
+                "description": "Welcome {user} to {server}!"
+            }
+        },
+        "youtubeMessage": {
+            "channelId": "",
+            "enabled": false,
+            "ytChannelId": "",
+            "lastvid": "",
+            "embed": {
+                "color": "",
+                "title": "",
+                "description": ""
+            }
+        },
+        "moderation": {
+            "linksAllowed": true,
+            "swearingAllowed": true,
+            "disabledCmdsChannels": []
+        },
+        "voiceMaster": {
+            "enabled": false,
+            "channelId": "",
+            "channels": {}
+        },
+        "logs": {
+            "channelId": "",
+            "moderation": false
+        },
+        "robloxVerification": {
+            "enabled": true,
+            "roleId": "",
+            "data": {}
+        },
+        "boosterMessage": {
+            "enabled": false,
+            "title": "",
+            "description": "",
+            "channelId": ""
+        },
+        "gwInfo": {
+            "channelId": ""
+        },
+        "warns": {},
+        "snipes": {},
+        "levels": {
+            "enabled": false,
+            "users": {}
+        }
+    }
+}
