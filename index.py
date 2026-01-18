@@ -1,10 +1,11 @@
 import asyncio
+from email import message
 import discord
 from discord.ext import commands
 from pytimeparse.timeparse import timeparse
 from easy_pil import * # type: ignore
 from dotenv import load_dotenv
-from detoxify import Detoxify
+from better_profanity import profanity
 from datetime import datetime
 import requests
 import random
@@ -15,7 +16,7 @@ import json
 
 # NOTE: This is my part file, DO NOT MESS with it
 async def blaze_part():
-    await bot.load_extension("blaze")
+    await bot.load_extension("blaze") # type: ignore
     
 def get_server_info(serverId: str):
     if serverId not in servers_temp:
@@ -84,7 +85,8 @@ def add_server(serverId: str):
         "levels": {
             "enabled": False,
             "users": {}
-        }
+        },
+        "ticketsResponder": "" 
     }
 
 def get_vm_owned_channel(ctx):
@@ -135,8 +137,9 @@ model = None
 servers_temp = TrackedDict()
 bot = commands.Bot(command_prefix=get_prefix, intents=discord.Intents.all(), help_command=None)
 token = os.getenv("TOKEN")
-model = Detoxify("original")
-bot.setup_hook = blaze_part # NOTE: DO NOT edit this part
+bot.setup_hook = blaze_part # type: ignore # NOTE: DO NOT edit this part
+
+profanity.load_censor_words()
 
 def resolve_color(value: str) -> discord.Color:
     if not value:
@@ -188,6 +191,7 @@ async def log_moderation(user, interaction, serverId, extraData):
 
             await channel.send(embed=embed) # type: ignore Must be a text channel.
 
+
 @bot.event
 async def on_ready():
     print("-- Grave Is Ready --")
@@ -205,11 +209,9 @@ async def on_message(message):
         if message.content.startswith("https://") or message.content.startswith("http://"):
             await log_moderation(message.author.id, "Shared a link", message.guild.id, f"Link was: {message.content}")
             await message.delete()
-    
-    scores = model.predict(message.content) # type: ignore it will become a model after startup
 
     if not moderation["swearingAllowed"]:
-        if scores["toxicity"] > 0.5:
+        if profanity.contains_profanity(message.content):
             await log_moderation(message.author.id, "Sweared", message.guild.id, f"Message was: {message.content}")
             await message.delete()
     
@@ -253,21 +255,21 @@ async def on_message(message):
         await bot.process_commands(message)
 
 @bot.event
-async def on_interaction(interaction: discord.Interaction):
+async def on_interaction(interaction: discord.Interaction): # type: ignore
     customId = interaction.data.get("custom_id") # type: ignore it does work!!
     server_info = get_server_info(interaction.guild.id) # type: ignore
 
     if customId == "RBX_verify_start":
 
         if server_info["robloxVerification"]["enabled"]:
-            modal = discord.ui.Modal(
+            modal = discord.ui.Modal( # type: ignore
                 title="Verify Your Roblox Account"
             )
-            text_input = discord.ui.TextInput(
+            text_input = discord.ui.TextInput( # type: ignore
                 label="Roblox Username"
             )
 
-            async def verifyRBX(interaction: discord.Interaction):
+            async def verifyRBX(interaction: discord.Interaction): # type: ignore
                 request = requests.post("https://users.roblox.com/v1/usernames/users", json={
                     "usernames": [text_input.value],
                     "excludeBannedUsers": True
@@ -283,19 +285,19 @@ async def on_interaction(interaction: discord.Interaction):
                 avatarId = str(request["data"][0]["id"])
                 avatarReq = requests.get(f"https://thumbnails.roblox.com/v1/users/avatar-headshot?userIds={avatarId}&size=150x150&format=Png&isCircular=true").json()["data"][0]["imageUrl"]
 
-                button = discord.ui.Button(
+                button = discord.ui.Button( # type: ignore
                     label="Yes",
-                    style=discord.ButtonStyle.green,
+                    style=discord.ButtonStyle.green, # type: ignore
                     custom_id=f"RBX_yes_{avatarId}"
                 )
 
-                button2 = discord.ui.Button(
+                button2 = discord.ui.Button( # type: ignore
                     label="No",
-                    style=discord.ButtonStyle.red,
+                    style=discord.ButtonStyle.red, # type: ignore
                     custom_id="RBX_no"
                 )
 
-                view = discord.ui.View()
+                view = discord.ui.View() # type: ignore
                 view.add_item(button)
                 view.add_item(button2)
 
@@ -312,18 +314,18 @@ async def on_interaction(interaction: discord.Interaction):
     elif customId.startswith("RBX_yes"): # type: ignore
         list_of_words = requests.get("https://www.mit.edu/~ecprice/wordlist.10000").text
         final_string = ""
-        button2 = discord.ui.Button(
+        button2 = discord.ui.Button( # type: ignore
             label="Change String",
-            style=discord.ButtonStyle.blurple,
+            style=discord.ButtonStyle.blurple, # type: ignore
             custom_id="RBX_yes"
         )
-        button = discord.ui.Button(
+        button = discord.ui.Button( # type: ignore
             label="I'm done",
-            style=discord.ButtonStyle.green,
+            style=discord.ButtonStyle.green, # type: ignore
             custom_id="RBX_done"
         )
 
-        view = discord.ui.View()
+        view = discord.ui.View() # type: ignore
         view.add_item(button)
         view.add_item(button2)
 
@@ -358,7 +360,7 @@ async def on_interaction(interaction: discord.Interaction):
 
                 await interaction.response.send_message(embed=embed, ephemeral=True)
 
-                time.sleep(5)
+                await asyncio.sleep(5)
                 
                 await interaction.user.add_roles(discord.utils.get(interaction.guild.roles, id=server_info["robloxVerification"]["roleId"])) # type: ignore HOPE.
             else:
@@ -369,6 +371,37 @@ async def on_interaction(interaction: discord.Interaction):
                 )
 
                 await interaction.response.send_message(embed=embed, ephemeral=True)
+    elif customId.startswith("MAKE_TICKET"):  # type: ignore
+        channel = await interaction.guild.create_text_channel(f"ticket-{random.randint(1000, 9999)}", category=interaction.channel.category) # type: ignore
+        await interaction.response.send_message(embed=discord.Embed(
+            description=f"The Ticket has been made! visit {channel.mention}",
+            color=discord.Color.blue()
+        ), ephemeral=True)
+
+        await channel.set_permissions(interaction.guild.default_role, view_channel=False) # type: ignore
+        await channel.set_permissions(interaction.guild.get_role(get_server_info(interaction.guild.id)["ticketsResponder"]), view_channel=True) # type: ignore
+        await channel.set_permissions(
+            interaction.user, # type: ignore
+            view_channel=True
+        )
+
+        embed = discord.Embed(
+            description=f"### **Ticket by {interaction.user.mention} **" , # type: ignore
+            color=discord.Color.blue()
+        )
+
+        button = discord.ui.Button(
+            label="Close Ticket",
+            style=discord.ButtonStyle.danger,
+            custom_id="CLOSE_TICKET"
+        )
+
+        view = discord.ui.View()
+        view.add_item(button)
+
+        await channel.send(embed=embed, view=view)
+    elif customId == "CLOSE_TICKET":
+        await interaction.channel.delete() # type: ignore its a text channel innit bruv
 
 @bot.event
 async def on_command_error(ctx, error):
@@ -501,7 +534,7 @@ async def ban(ctx, member: discord.Member, reason = None):
         await member.ban(reason=reason)
         await log_moderation(member, "Ban", ctx.guild.id, f"User got banned for reason {reason}")
 
-        await ctx.send(f"✅ Banned user <@{member.id}> {reason: reason if reason else 'no reason'}")
+        await ctx.send(f"✅ Banned user <@{member.id}> {reason: reason if reason else 'no reason'}") # type: ignore
     except Exception as e:
         await ctx.send(f":x: **Error**: {e}")
 
@@ -519,7 +552,7 @@ async def kick(ctx, member: discord.Member, reason = None):
         await member.kick(reason=reason)
         await log_moderation(member, "Kick", ctx.guild.id, f"User got kicked for reason {reason}")
 
-        await ctx.send(f"✅ Kicked user <@{member.id}> for {reason: reason if reason else 'no reason'}")
+        await ctx.send(f"✅ Kicked user <@{member.id}> for {reason: reason if reason else 'no reason'}") # type: ignore
     except Exception as e:
         await ctx.send(f":x: **Error**: {e}")
 
@@ -793,7 +826,7 @@ async def snipe(ctx):
         await ctx.send(embed=embed)
 
 @bot.command(
-    name="prefixchange",
+    name="prefixchange", # type: ignore
     descripton="Change the prefix for the server."
 )
 @commands.has_permissions(administrator=True)
@@ -825,7 +858,7 @@ async def changepfp(ctx, url):
         await ctx.send(f":x: {e}")
 
 @bot.command(
-    name="purge",
+    name="purge", # type: ignore
     descriptions="Purge messages."
 )
 @commands.has_permissions(administrator=True)
@@ -834,7 +867,7 @@ async def purge(ctx, amount):
 
     msg = await ctx.send(f"✅ Purged {amount} messages")
 
-    time.sleep(1)
+    await asyncio.sleep(1)
 
     await msg.delete()
 
@@ -931,7 +964,7 @@ async def vmrename(ctx, *, name):
 
 
 @bot.command(name="vmdefaultlimit", description="Set default VoiceMaster limit")
-@commands.has_permissions(administrator=True)
+
 async def vmdefaultlimit(ctx, limit: int):
     if limit < 0 or limit > 99:
         return await ctx.send("❌ Limit must be between 0 and 99.")
@@ -943,7 +976,7 @@ async def vmdefaultlimit(ctx, limit: int):
 
 
 @bot.command(name="vmdisable", description="Disable VoiceMaster")
-@commands.has_permissions(administrator=True)
+
 async def vmdisable(ctx):
     server_info = get_server_info(ctx.guild.id)
     vm = server_info["voiceMaster"]
@@ -959,13 +992,14 @@ async def vmdisable(ctx):
     await ctx.send("🛑 VoiceMaster disabled and cleaned up.")
 
 @bot.command()
+@commands.has_permissions(administrator=True)
 async def warn(ctx, user: discord.Member, *, reason):
     server_info = get_server_info(ctx.guild.id)
 
-    await log_moderation(ctx.author.id, f"Warned <@{user.id}>", ctx.guild.id, "")
+    await log_moderation(ctx.author.id, f"Warned <@{user.id}>", ctx.guild.id, "") # type: ignore
 
-    if user.id not in server_info["warns"]:
-        server_info["warns"][user.id] = [
+    if user.id not in server_info["warns"]: # type: ignore
+        server_info["warns"][user.id] = [ # type: ignore
             {
                 "date": datetime.now(),
                 "by": ctx.author.id,
@@ -973,25 +1007,26 @@ async def warn(ctx, user: discord.Member, *, reason):
             }
         ]
     else:
-        server_info["warns"][user.id].append({
+        server_info["warns"][user.id].append({ # type: ignore
                 "date": datetime.now(),
                 "by": ctx.author.id,
                 "reason": reason
             })
     
     embed = discord.Embed(
-        description=f"<:PlusLogo:1453259324674539661> A warn was added to <@{user.id}> for {reason}. The user now has {len(server_info['warns'][user.id])} warns.",
+        description=f"<:PlusLogo:1453259324674539661> A warn was added to <@{user.id}> for {reason}. The user now has {len(server_info['warns'][user.id])} warns.", # type: ignore
         color=discord.Color.blue()
     )
 
     await ctx.send(embed=embed)
 
 @bot.command()
+@commands.has_permissions(administrator=True)
 async def clearwarns(ctx, user: discord.Member):
     server_info = get_server_info(ctx.guild.id)
 
-    if user.id in server_info["warns"]:
-        server_info["warns"][user.id] = []
+    if user.id in server_info["warns"]: # type: ignore
+        server_info["warns"][user.id] = [] # type: ignore
 
         embed = discord.Embed(
             description="<:Tick:1453257219545108632> Your updates were applied without issue.",
@@ -1008,50 +1043,54 @@ async def clearwarns(ctx, user: discord.Member):
         await ctx.send(embed=embed)
 
 @bot.command()
+@commands.has_permissions(administrator=True)
 async def checkwarns(ctx, user: discord.Member):
     server_info = get_server_info(ctx.guild.id)
 
-    if user.id in server_info["warns"]:
+    if user.id in server_info["warns"]: # type: ignore
         embed = discord.Embed(
-            description=f"## The user <@{user.id}> has {len(server_info['warns'][user.id])} warns.",
+            description=f"## The user <@{user.id}> has {len(server_info['warns'][user.id])} warns.", # type: ignore
             color=discord.Color.blue()
         )
 
-        for i, warn in enumerate(server_info["warns"][user.id], start=1):
+        for i, warn in enumerate(server_info["warns"][user.id], start=1): # type: ignore
             embed.add_field(name=warn['reason'], value=f"By {bot.get_user(int(warn['by'])).id} on {warn['date']}") # type: ignore im pretty sure it does exist ;) -- iamiak
         
         await ctx.send(embed=embed)
     else:
         embed = discord.Embed(
-            description=f"The user <@{user.id}> has no warns.",
+            description=f"The user <@{user.id}> has no warns.", # type: ignore
             color=discord.Color.blue()
         )
 
         await ctx.send(embed=embed)
 
 @bot.command()
+@commands.has_permissions(administrator=True)
 async def roleadd(ctx, user: discord.Member, role: discord.Role):
     await user.add_roles(discord.utils.get(ctx.guild.roles, id=role.id))
 
     embed = discord.Embed(
-        description=f"<:PlusLogo:1453259324674539661> Role <@&{role.id}> was added to <@{user.id}>",
+        description=f"<:PlusLogo:1453259324674539661> Role <@&{role.id}> was added to <@{user.id}>", # type: ignore
         color=discord.Color.blue()
     )
 
     await ctx.send(embed=embed)
 
 @bot.command()
+@commands.has_permissions(administrator=True)
 async def roleremove(ctx, user: discord.Member, role: discord.Role):
     await user.remove_roles(discord.utils.get(ctx.guild.roles, id=role.id))
 
     embed = discord.Embed(
-        description=f"<:PlusLogo:1453259324674539661> Role <@&{role.id}> was removed from <@{user.id}>",
+        description=f"<:PlusLogo:1453259324674539661> Role <@&{role.id}> was removed from <@{user.id}>", # type: ignore
         color=discord.Color.blue()
     )
 
     await ctx.send(embed=embed)
 
 @bot.command()
+@commands.has_permissions(administrator=True)
 async def levelsystemtoggle(ctx):
     server_info = get_server_info(ctx.guild.id)
 
@@ -1101,6 +1140,7 @@ async def level(ctx):
         await ctx.send("This server does not use Levels.")
 
 @bot.command()
+@commands.has_permissions(administrator=True)
 async def setBoosterMessage(ctx, title, description, channel: discord.TextChannel):
     server_info = get_server_info(ctx.guild.id)
     description = description.replace("+", " ")
@@ -1117,21 +1157,22 @@ async def setBoosterMessage(ctx, title, description, channel: discord.TextChanne
         name="rbxauthorization",
         description="Add roblox authentication to your server!"
 )
-async def rbxauthorization(ctx, role: discord.Role):
+@commands.has_permissions(administrator=True)
+async def rbxauthorization(ctx, role: discord.Role): # type: ignore
     server_info = get_server_info(ctx.guild.id)
 
-    embed = discord.Embed(
+    embed = discord.Embed( # type: ignore
         title="Verification",
         description="This server uses Grave Bots Roblox linker authentication.",
-        color=discord.Color.purple()
+        color=discord.Color.purple() # type: ignore
     )
-    button = discord.ui.Button(
+    button = discord.ui.Button( # type: ignore
         label="Open Input",
-        style=discord.ButtonStyle.blurple,
+        style=discord.ButtonStyle.blurple, # type: ignore
         custom_id="RBX_verify_start"
     )
 
-    view = discord.ui.View()
+    view = discord.ui.View() # type: ignore
     view.add_item(button)
 
     server_info["robloxVerification"]["enabled"] = True
@@ -1147,6 +1188,7 @@ async def rbxauthorization(ctx, role: discord.Role):
     name="setgwchannel",
     description="Set the GiveAway Channel."
 )
+@commands.has_permissions(administrator=True)
 async def setgwchannel(ctx, channel: discord.TextChannel):
     server_info = get_server_info(ctx.guild.id)
 
@@ -1158,6 +1200,7 @@ async def setgwchannel(ctx, channel: discord.TextChannel):
     name="gw",
     description="Start a giveaway!"
 )
+@commands.has_permissions(administrator=True)
 async def gw(ctx, prize, time, winners):
     server_info = get_server_info(ctx.guild.id)
     prize = prize.replace("+", " ")
@@ -1185,5 +1228,31 @@ async def gw(ctx, prize, time, winners):
 
     await bot.get_channel(server_info["gwInfo"]["channelId"]).send(f"Congratulations {winners_mentions}! You won **{prize}**!") # type: ignore
 
+@bot.command(
+    name="ticketsystem",
+    description="Make a ticket."
+)
+@commands.has_permissions(administrator=True)
+async def ticket_system(ctx, embedTitle, embedDescription, respondRole: discord.Role):
+    server_info = get_server_info(ctx.guild.id)
+
+    server_info["ticketsResponder"] = respondRole.id
+
+    embed = discord.Embed(
+        title=embedTitle.replace("+", " "),
+        description=embedDescription.replace("+", " "),
+        color=discord.Color.blue()
+    )
+
+    button = discord.ui.Button( # type: ignore
+        label="📨 Make a ticket",
+        custom_id=f"MAKE_TICKET_{ctx.channel.category.id}"
+    )
+
+    view = discord.ui.View() # type: ignore
+
+    view.add_item(button)
+
+    await ctx.send(embed=embed, view=view)
 
 bot.run(token)  # type: ignore It works.
