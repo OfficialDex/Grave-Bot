@@ -1,5 +1,5 @@
 {
-    "1451878126039728253": {
+    "1404983899079315506": {
         "prefix": ",",
         "welcomeMessage": {
             "channelId": "",
@@ -60,6 +60,7 @@
         "levels": {
             "enabled": false,
             "users": {}
-        }
+        },
+        "ticketsResponder": ""
     }
 }
