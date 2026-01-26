@@ -1,0 +1,54 @@
+{
+  "love_sfw": {
+    "id": "love_sfw",
+    "title": "Love (SFW)",
+    "description": "Adds wholesome love commands (safe for work version)",
+    "creator": "Blaze",
+    "image": "https://cdn.discordapp.com/attachments/1351366618743181352/1464856068063760540/Picsart_26-01-25_11-04-27-721.png?ex=6976fd06&is=6975ab86&hm=4886ddb4162601d3c046556390675ed75adca1a5647b5ce66a59205151657f8e&",
+    "commands": [
+      "kiss",
+      "hug",
+      "slap",
+      "cuddle",
+      "waifu",
+      "cry",
+      "lick",
+      "pat",
+      "bonk",
+      "yeet",
+      "blush",
+      "smile",
+      "wave",
+      "highfive",
+      "handhold",
+      "bite",
+      "glomp",
+      "kill",
+      "kickk",
+      "happy",
+      "wink",
+      "poke",
+      "dance",
+      "cringe"
+    ],
+    "versions": {
+      "0.1": "love_sfw.py"
+    }
+  },
+  "love_nsfw": {
+    "id": "love_nsfw",
+    "title": "Love (NSFW)",
+    "description": "Adds wholesome love commands (not safe for work version)",
+    "creator": "Blaze",
+    "image": "https://cdn.discordapp.com/attachments/1351366618743181352/1464856068063760540/Picsart_26-01-25_11-04-27-721.png?ex=6976fd06&is=6975ab86&hm=4886ddb4162601d3c046556390675ed75adca1a5647b5ce66a59205151657f8e&",
+    "commands": [
+      "waifu18+",
+      "neko",
+      "blowjob",
+      "trap"
+    ],
+    "versions": {
+      "0.1": "love_nsfw.py"
+    }
+  }
+}
