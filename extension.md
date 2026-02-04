@@ -81,15 +81,19 @@ async def setup(bot):
 - you **DO NOT** have to define intents in extensions file, intents only belong to index.py file
 - you **DO NOT** have to use 
 ```
+```
 @bot.events
-``` use 
+```
+use
 ```
 @commands.Cog.listener()
-``` instead
+```
+ instead
 - if you want to add a global variable to work all over bot, define the variable in index.py file else if you want to define a global variable only inside your extension then you have to use it like
 ```
  self.gg = gg
-``` (I mean its a basic knowledge)
+```
+(I mean its a basic knowledge)
 - you **DO NOT** have to define bot, prefixes or any such perameters in extensions since they belong to index.py **ONLY**
 - you should always check the names of commands you are going to add so there should not be same command somewhere else in the bot 
 
