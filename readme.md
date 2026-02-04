@@ -1,6 +1,5 @@
 # Documentation for extension system (written by blaze :>)
 
-***This documentation is for developers only, if you are a non-dev or not working in bot's backend please ignore***
 ## To create a extension
 - open extension.json file
 - put the json exactly in this format
