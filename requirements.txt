@@ -1,0 +1,6 @@
+discord.py
+pytimeparse
+easy-pil
+python-dotenv
+better-profanity
+requests
