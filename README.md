@@ -6,23 +6,31 @@ Grave is a free and open source multipurpose discord bot written in python using
 ```shell
 git clone https://github.com/OfficialDex/Grave-Bot.git grave
 ```
-2 **run required libraries installation**
+2. **Get inside directory**
+```
+cd grave
+```
+3. **run required libraries installation**
 ```shell
 pip install -r requirements.txt
 ```
-3 **Create .env file and put these values**
-- TOKEN=put_discord_bot_token
+4. **Create .env file and put these values:**
 
-- secret_key=put_key_here 
+ 
+``` TOKEN=put_discord_bot_token
+```
 
+``` secret_key=put_key_here 
+```
   [Get free api key](https://enter.pollinations.ai/)
 
-- github_token=put_your_token_here
+``` github_token=put_your_token_here
+```
 [Get github fine grained token](https://github.com/settings/personal-access-tokens)
 
-ONLY REQUIRED TO FILL THIS IF YOU ARE GOING TO STAY UPDATED WITH EXTENSION SYSTEM
+**ONLY REQUIRED TO FILL THIS IF YOU ARE GOING TO STAY UPDATED WITH EXTENSION SYSTEM**
 
-4. Run the bot
+5. Run the bot
 ```py
 python index.py
 ```
@@ -38,10 +46,10 @@ Prefix of the bot is ","
 Run ,help to get list of all available commands.
 use ,man {command name} to get detailed info about a specific command
 
-# Updates
+# Update (26/01/26)
 **V6: (By Blaze)**
 - Added commands: leaderboard, messages, invites, alias, man, extension, extensions
-- Added extension support (docs at readme.md)
+- Added extension support (docs at extension.md)
 - Removed unused helpers
 - Removed broken codes
 - Fixed some commands
