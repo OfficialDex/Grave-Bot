@@ -17,14 +17,14 @@ pip install -r requirements.txt
 4. **Create .env file and put these values:**
 
  
-``` TOKEN=put_discord_bot_token
+```py TOKEN=put_discord_bot_token
 ```
 
-``` secret_key=put_key_here 
+```py secret_key=put_key_here 
 ```
   [Get free api key](https://enter.pollinations.ai/)
 
-``` github_token=put_your_token_here
+```py github_token=put_your_token_here
 ```
 [Get github fine grained token](https://github.com/settings/personal-access-tokens)
 
